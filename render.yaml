@@ -2,6 +2,11 @@ services:
   - type: web
     name: youtube-downloader
     env: node
-    buildCommand: npm install && npm run build
+    buildCommand: npm install && npm install -g react-scripts && npm run build
     startCommand: npm start
-    nodeVersion: 16.x
+    nodeVersion: 23.x
+    envVars:
+      - key: NODE_VERSION
+        value: 23.x
+      - key: CI
+        value: false
