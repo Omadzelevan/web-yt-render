@@ -1,29 +1,43 @@
 import "./App.css";
-import { useState } from "react";
+import React, { useState } from "react";
 
 function App() {
   const [url, setUrl] = useState("");
   const [format, setFormat] = useState("mp4");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    // Validate URL
+    if (!url.includes("youtube.com") && !url.includes("youtu.be")) {
+      setError("Please enter a valid YouTube URL");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const response = await fetch(
-        "https://my-backend-service.onrender.com/download",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ url, format }),
-        }
-      );
+      // Replace with your actual backend URL from Render
+      const BACKEND_URL = "https://your-backend-service.onrender.com";
+
+      console.log("Sending request to backend...");
+      const response = await fetch(`${BACKEND_URL}/download`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: url,
+          format: format,
+        }),
+      });
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(
-          `Network response was not ok: ${response.statusText} - ${errorText}`
-        );
+        throw new Error(`Download failed: ${errorText}`);
       }
 
       const blob = await response.blob();
@@ -34,49 +48,50 @@ function App() {
       document.body.appendChild(a);
       a.click();
       a.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+      setUrl("");
     } catch (error) {
-      console.error("Error downloading the file:", error);
-      alert(`There was an error downloading the file: ${error.message}`);
+      console.error("Download error:", error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="App">
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8 text-center">
-          YouTube Video & MP3 Downloader
-        </h1>
-
-        <form onSubmit={handleSubmit} className="max-w-xl mx-auto">
-          <div className="mb-4">
+      <div className="container">
+        <h1 className="title">YouTube Downloader</h1>
+        <form onSubmit={handleSubmit} className="download-form">
+          <div className="input-group">
             <input
               type="text"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="ჩასვით YouTube ვიდეოს ბმული"
-              className="w-full p-3 border rounded-lg"
+              placeholder="Enter YouTube URL"
+              className="url-input"
+              disabled={loading}
               required
             />
-          </div>
-
-          <div className="mb-4">
             <select
               value={format}
               onChange={(e) => setFormat(e.target.value)}
-              className="w-full p-3 border rounded-lg"
+              className="format-select"
+              disabled={loading}
             >
-              <option value="mp4">MP4 (ვიდეო)</option>
-              <option value="mp3">MP3 (აუდიო)</option>
+              <option value="mp4">MP4</option>
+              <option value="mp3">MP3</option>
             </select>
           </div>
-
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700"
+            className={`download-button ${loading ? "loading" : ""}`}
+            disabled={loading}
           >
-            გადმოწერა
+            {loading ? "Downloading..." : "Download"}
           </button>
         </form>
+        {error && <div className="error-message">{error}</div>}
       </div>
     </div>
   );
