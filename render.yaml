@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: youtube-downloader
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    nodeVersion: 16.x
